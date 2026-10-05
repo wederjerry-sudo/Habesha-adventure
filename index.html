@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>የኢትዮጵያ ጉዞ | Habesha Adventure</title>
+  <style>
+    :root {
+      --primary: #008751;
+      --secondary: #FCD116;
+      --accent: #DA121A;
+      --bg: #F4F6F8;
+      --text: #1F2937;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 12px; }
+    .game-container { width: 100%; max-width: 480px; background: #fff; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); overflow: hidden; padding: 16px; }
+    .header { background: var(--primary); color: #fff; padding: 16px; border-radius: 12px; text-align: center; position: relative; margin-bottom: 12px; }
+    .lang-btn { position: absolute; top: 12px; right: 12px; background: var(--secondary); color: #000; border: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+    .title { font-size: 22px; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; opacity: 0.9; }
+    .gift-banner { background: #FFF9E6; border: 2px dashed var(--secondary); padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 12px; font-weight: bold; font-size: 13px; }
+    .stats { display: flex; justify-content: space-around; font-size: 16px; font-weight: bold; margin-bottom: 12px; }
+    .status-msg { text-align: center; padding: 8px; font-weight: bold; font-size: 15px; color: var(--primary); margin-bottom: 10px; }
+    .action-btn { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 16px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card { border: 2px solid #E5E7EB; border-radius: 12px; padding: 16px; text-align: center; background: #FAFAFA; transition: 0.2s; }
+    .card.claimed { border-color: var(--primary); background: #E6F4EA; }
+    .card-icon { font-size: 36px; margin-bottom: 8px; }
+    .card-name { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
+    .card-role { font-size: 12px; color: #6B7280; }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="header">
+      <button class="lang-btn" id="langToggle" onclick="toggleLanguage()">አማርኛ / EN</button>
+      <h1 class="title" id="gameTitle">የኢትዮጵያ ጉዞ</h1>
+      <p class="subtitle" id="gameSubtitle">የኢትዮጵያ ባህል እና ታሪካዊ ቦታዎች</p>
+    </div>
+
+    <div class="gift-banner" id="giftText">
+      🎁 ለእናንተ የተዘጋጀ ልዩ የባህል ስጦታ!<br>"የኢትዮጵያን ታሪካዊ ቦታዎች እየተማሩ ይጫወቱ!"
+    </div>
+
+    <div class="stats">
+      <span><span id="scoreLabel">ነጥብ</span>: <span id="score">0</span></span>
+      <span>|</span>
+      <span><span id="turnsLabel">የቀሩ ሙከራዎች</span>: <span id="turns">10</span></span>
+    </div>
+
+    <div class="status-msg" id="status">የባህል ቦታዎችን ለመያዝ ካርድ ይውሰዱ!</div>
+
+    <button class="action-btn" id="drawBtn" onclick="drawLandmark()">ካርድ ወስድ</button>
+
+    <div class="grid">
+      <div class="card" id="card-fasil">
+        <div class="card-icon">🏰</div>
+        <div class="card-name" id="fasilTitle">ፋሲል ግቢ</div>
+        <div class="card-role" id="fasilRole">(እናት / ንግሥት)</div>
+      </div>
+      <div class="card" id="card-gojo">
+        <div class="card-icon">🛖</div>
+        <div class="card-name" id="gojoTitle">ጎጆ ቤት</div>
+        <div class="card-role" id="gojoRole">(አባት / ጠባቂ)</div>
+      </div>
+      <div class="card" id="card-lalibela">
+        <div class="card-icon">⛪</div>
+        <div class="card-name" id="lalibelaTitle">ላሊበላ</div>
+        <div class="card-role" id="lalibelaRole">(ወንድም / መሪ)</div>
+      </div>
+      <div class="card" id="card-unity">
+        <div class="card-icon">🌳</div>
+        <div class="card-name" id="unityTitle">አንድነት ፓርክ</div>
+        <div class="card-role" id="unityRole">(እህት / ተንከባካቢ)</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentLang = 'am';
+    let score = 0;
+    let turns = 10;
+    const claimed = { fasil: false, gojo: false, lalibela: false, unity: false };
+
+    const translations = {
+      am: {
+        title: "የኢትዮጵያ ጉዞ",
+        subtitle: "የኢትዮጵያ ባህል እና ታሪካዊ ቦታዎች",
+        gift: "🎁 ለእናንተ የተዘጋጀ ልዩ የባህል ስጦታ!<br>\"የኢትዮጵያን ታሪካዊ ቦታዎች እየተማሩ ይጫወቱ!\"",
+        scoreLabel: "ነጥብ",
+        turnsLabel: "የቀሩ ሙከራዎች",
+        statusInit: "የባህል ቦታዎችን ለመያዝ ካርድ ይውሰዱ!",
+        drawBtn: "ካርድ ወስድ",
+        resetBtn: "እንደገና ጀምር",
+        fasilTitle: "ፋሲል ግቢ",
+        fasilRole: "(እናት / ንግሥት)",
+        gojoTitle: "ጎጆ ቤት",
+        gojoRole: "(አባት / ጠባቂ)",
+        lalibelaTitle: "ላሊበላ",
+        lalibelaRole: "(ወንድም / መሪ)",
+        unityTitle: "አንድነት ፓርክ",
+        unityRole: "(እህት / ተንከባካቢ)",
+        claimedMsg: "✅ ተይዟል! +5 Pts",
+        gameOverMsg: "🎉 ጨዋታው ተጠናቋል! ያገኙት ነጥብ: "
+      },
+      en: {
+        title: "Habesha Adventure",
+        subtitle: "Ethiopian Culture & Historical Places",
+        gift: "🎁 A Special Cultural Gift Prepared For You!<br>\"Learn Ethiopian landmarks while playing!\"",
+        scoreLabel: "Score",
+        turnsLabel: "Turns Left",
+        statusInit: "Draw a card to claim cultural landmarks!",
+        drawBtn: "Draw Card",
+        resetBtn: "Play Again",
+        fasilTitle: "Fasil Ghebbi",
+        fasilRole: "(Mother / Queen)",
+        gojoTitle: "Gojo House",
+        gojoRole: "(Father / Protector)",
+        lalibelaTitle: "Lalibela",
+        lalibelaRole: "(Brother / Leader)",
+        unityTitle: "Unity Park",
+        unityRole: "(Sister / Caregiver)",
+        claimedMsg: "✅ Claimed! +5 Pts",
+        gameOverMsg: "🎉 Game Over! Final Score: "
+      }
+    };
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'am' ? 'en' : 'am';
+      const t = translations[currentLang];
+      
+      document.getElementById('gameTitle').innerText = t.title;
+      document.getElementById('gameSubtitle').innerText = t.subtitle;
+      document.getElementById('giftText').innerHTML = t.gift;
+      document.getElementById('scoreLabel').innerText = t.scoreLabel;
+      document.getElementById('turnsLabel').innerText = t.turnsLabel;
+      document.getElementById('fasilTitle').innerText = t.fasilTitle;
+      document.getElementById('fasilRole').innerText = t.fasilRole;
+      document.getElementById('gojoTitle').innerText = t.gojoTitle;
+      document.getElementById('gojoRole').innerText = t.gojoRole;
+      document.getElementById('lalibelaTitle').innerText = t.lalibelaTitle;
+      document.getElementById('lalibelaRole').innerText = t.lalibelaRole;
+      document.getElementById('unityTitle').innerText = t.unityTitle;
+      document.getElementById('unityRole').innerText = t.unityRole;
+      
+      if (turns > 0) {
+        document.getElementById('drawBtn').innerText = t.drawBtn;
+      } else {
+        document.getElementById('drawBtn').innerText = t.resetBtn;
+      }
+    }
+
+    function drawLandmark() {
+      const t = translations[currentLang];
+      if (turns <= 0) {
+        score = 0;
+        turns = 10;
+        Object.keys(claimed).forEach(k => {
+          claimed[k] = false;
+          document.getElementById('card-' + k).classList.remove('claimed');
+        });
+        document.getElementById('score').innerText = score;
+        document.getElementById('turns').innerText = turns;
+        document.getElementById('status').innerText = t.statusInit;
+        document.getElementById('drawBtn').innerText = t.drawBtn;
+        return;
+      }
+
+      turns--;
+      document.getElementById('turns').innerText = turns;
+
+      const keys = ['fasil', 'gojo', 'lalibela', 'unity'];
+      const pick = keys[Math.floor(Math.random() * keys.length)];
+
+      if (!claimed[pick]) {
+        claimed[pick] = true;
+        score += 5;
+        document.getElementById('score').innerText = score;
+        document.getElementById('card-' + pick).classList.add('claimed');
+        document.getElementById('status').innerText = t.claimedMsg;
+      }
+
+      if (turns === 0) {
+        document.getElementById('status').innerText = t.gameOverMsg + score;
+        document.getElementById('drawBtn').innerText = t.resetBtn;
+      }
+    }
+  </script>
+</body>
+</html>
